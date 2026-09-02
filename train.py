@@ -1,5 +1,3 @@
-
-
 import re
 import string
 import pickle
@@ -30,7 +28,7 @@ stemmer = PorterStemmer()
 
 def load_data(path="spam.csv"):
     df = pd.read_csv(path, encoding="latin-1")
-    # Kaggle wali file mein extra unnamed columns hote hain, unko hata rahe hain
+  
     df = df[[df.columns[0], df.columns[1]]]
     df.columns = ["label", "message"]
     df.drop_duplicates(inplace=True)
