@@ -1,19 +1,4 @@
-"""
-SMART SPAM SHIELD - Training Script
- AIML Project
 
-Ye script normal "TF-IDF + Naive Bayes" wale generic spam detector se alag hai.
-Ismein hum 2 tarah ke features combine kar rahe hain:
-   1) TF-IDF text features (jo word patterns pakadte hain)
-   2) Hand-crafted "behavioural" features (jo spam messages ke structure/behaviour
-      ko pakadte hain - jaise URL count, currency symbol, capital letters ratio,
-      urgency words, phone numbers, etc.)
-
-Isse model sirf words pe depend nahi karta, balki message ke "style" ko bhi
-samajhta hai - isliye naye / unseen spam patterns pe bhi better generalize karta hai.
-
-Author: <Manish Kumar>
-"""
 
 import re
 import string
@@ -39,13 +24,9 @@ nltk.download("punkt", quiet=True)
 STOPWORDS = set(stopwords.words("english"))
 stemmer = PorterStemmer()
 
-# -----------------------------------------------------------------------
+
 # STEP 1: Load dataset
-# -----------------------------------------------------------------------
-# Dataset: SMS Spam Collection Dataset (UCI / Kaggle)
-# Download link diya gaya hai README.md mein.
-# File format expected: CSV with 2 columns -> label (ham/spam), message
-# -----------------------------------------------------------------------
+
 
 def load_data(path="spam.csv"):
     df = pd.read_csv(path, encoding="latin-1")
@@ -70,9 +51,7 @@ def clean_text(text):
     return " ".join(words)
 
 
-# -----------------------------------------------------------------------
-# STEP 3: Hand-crafted "behavioural" features (ye hi unique part hai)
-# -----------------------------------------------------------------------
+ 
 URGENCY_WORDS = [
     "free", "win", "winner", "cash", "prize", "urgent", "congratulations",
     "click", "claim", "offer", "limited", "act now", "call now", "credit",
