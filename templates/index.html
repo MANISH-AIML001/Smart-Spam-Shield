@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Spam Shield</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-scene">
+
+<header class="topbar">
+  <div class="wrap topbar__inner">
+    <div class="brand">
+      <span class="brand__mark"></span>
+      Smart Spam Shield
+    </div>
+    <nav class="topnav">
+      <a href="#how" class="nav-btn">How it works</a>
+      <a href="#tech" class="nav-btn">Tech</a>
+      <span class="user-chip">{{ username[:1].upper() }}</span>
+      <a href="{{ url_for('logout') }}" class="nav-btn nav-btn--signout">Sign out</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap hero">
+  <section class="hero__text">
+    <h1 class="gradient-text">Know it's spam<br>before you click it.</h1>
+    <p class="hero__sub">
+      Paste any SMS, email or DM below. The model reads both what the
+      message says and how it's written — links, urgency words, capital
+      letters — to catch spam that keyword filters miss.
+    </p>
+
+    <div class="channel-row" role="group" aria-label="Message source">
+      <button type="button" class="channel-btn is-active" data-channel="whatsapp" data-placeholder="e.g. You've been added to a group. Claim your free gift now!! Tap the link below.">
+        <svg viewBox="0 0 24 24" class="channel-icon channel-icon--whatsapp"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 2a8 8 0 0 1 6.9 12l.6 2.4-2.5-.6A8 8 0 1 1 12 4Zm-3.4 4c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.2.2 1.8 2.9 4.4 4 .6.3 1.1.4 1.5.6.6.2 1.2.1 1.6-.1.5-.2 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.2-.5-.3l-1.9-.9c-.3-.1-.5-.1-.6.1l-.5.6c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2.1-1.3-.8-.7-1.3-1.5-1.5-1.8-.1-.3 0-.4.1-.5l.4-.5c.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5L9.1 8.4c-.2-.4-.4-.4-.5-.4Z"/></svg>
+        WhatsApp
+      </button>
+      <button type="button" class="channel-btn" data-channel="gmail" data-placeholder="e.g. Subject: Your account will be suspended — verify now to avoid closure.">
+        <svg viewBox="0 0 24 24" class="channel-icon channel-icon--gmail"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 6.5 12 13l8-6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Gmail
+      </button>
+      <button type="button" class="channel-btn" data-channel="sms" data-placeholder="e.g. Congratulations! You have WON a free prize. Click here to claim now!!!">
+        <svg viewBox="0 0 24 24" class="channel-icon channel-icon--sms"><path d="M4 4.5h16a1 1 0 0 1 1 1V16a1 1 0 0 1-1 1H9l-4.5 4V17H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        SMS
+      </button>
+    </div>
+
+    <div class="scan-card">
+      <textarea id="messageInput" rows="5"
+        placeholder="e.g. Congratulations! You've WON a free prize. Click here to claim now!!!"></textarea>
+      <div class="scan-card__footer">
+        <span id="charCount" class="char-count">0 characters</span>
+        <button id="scanBtn">Scan message</button>
+      </div>
+    </div>
+
+    <div id="triggerRow" class="trigger-row hidden"></div>
+  </section>
+
+  <section class="hero__gauge">
+    <div class="gauge">
+      <svg viewBox="0 0 220 220" class="gauge__svg">
+        <circle cx="110" cy="110" r="92" class="gauge__track"/>
+        <circle id="gaugeArc" cx="110" cy="110" r="92" class="gauge__arc"/>
+      </svg>
+      <div class="gauge__center">
+        <span id="gaugeValue">--</span>
+        <span id="gaugeLabel" class="gauge__label">awaiting scan</span>
+      </div>
+    </div>
+    <div id="verdictBadge" class="verdict-badge hidden"></div>
+  </section>
+</main>
+
+<section id="featurePanel" class="wrap feature-panel hidden">
+  <h2>Why this verdict</h2>
+  <div id="featureGrid" class="feature-grid"></div>
+</section>
+
+<section id="how" class="wrap how">
+  <h2>How the model decides</h2>
+  <p class="how-lede">Three layers work together on every scan — no single
+    signal has to catch everything on its own.</p>
+  <div class="how-grid">
+    <article class="how-card how-card--tfidf">
+      <div class="how-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+      </div>
+      <span class="how-card__num">TF&#8209;IDF</span>
+      <h3>Reads the words</h3>
+      <p>Every word is weighted by how unusual and message-specific it is,
+        so the model learns which word patterns tend to show up in spam.</p>
+    </article>
+    <article class="how-card how-card--behaviour">
+      <div class="how-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-8M20 8V4h-4"/></svg>
+      </div>
+      <span class="how-card__num">Behaviour</span>
+      <h3>Reads the structure</h3>
+      <p>Nine extra signals — link count, capital-letter ratio, urgency
+        words, phone numbers — catch spam that's been reworded to dodge
+        word filters.</p>
+    </article>
+    <article class="how-card how-card--ensemble">
+      <div class="how-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M8 8.5 11 16M16 8.5 13 16M8.4 7h7.2"/></svg>
+      </div>
+      <span class="how-card__num">Ensemble</span>
+      <h3>Three models vote</h3>
+      <p>Logistic Regression, Random Forest and SVM each cast a weighted
+        vote. Agreement across all three makes the verdict harder to fool.</p>
+    </article>
+  </div>
+</section>
+
+<footer id="tech" class="wrap footer">
+  <p>Built with scikit-learn, Flask &amp; NLTK </p>
+</footer>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
