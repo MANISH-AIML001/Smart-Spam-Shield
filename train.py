@@ -41,8 +41,8 @@ def load_data(path="spam.csv"):
 # -----------------------------------------------------------------------
 def clean_text(text):
     text = str(text).lower()
-    text = re.sub(r"http\S+|www\S+", " ", text)          # urls hatao
-    text = re.sub(r"\d+", " ", text)                      # numbers hatao
+    text = re.sub(r"http\S+|www\S+", " ", text)         
+    text = re.sub(r"\d+", " ", text)                      
     text = text.translate(str.maketrans("", "", string.punctuation))
     words = text.split()
     words = [stemmer.stem(w) for w in words if w not in STOPWORDS and len(w) > 1]
