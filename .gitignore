@@ -1,0 +1,5 @@
+.venv/
+_pycache_/
+users.db
+dataset/testing/testing_set_1.csv
+dataset/training/clean-dataset.csv

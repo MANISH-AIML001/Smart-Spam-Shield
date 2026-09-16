@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — Smart Spam Shield</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-scene">
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="brand brand--center">
+      <span class="brand__mark"></span>
+      Smart Spam Shield
+    </div>
+
+    <h1 class="gradient-text auth-heading">Welcome back</h1>
+    <p class="auth-sub">Sign in to scan a message.</p>
+
+    {% if just_signed_up %}
+      <div class="auth-note auth-note--safe">Account created — sign in below.</div>
+    {% endif %}
+    {% if error %}
+      <div class="auth-note auth-note--spam">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="auth-form">
+      <label>
+        <span>Username</span>
+        <input type="text" name="username" autocomplete="username" required autofocus>
+      </label>
+      <label>
+        <span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Sign in</button>
+    </form>
+
+    <p class="auth-switch">
+      New here? <a href="{{ url_for('signup') }}">Create an account</a>
+    </p>
+  </div>
+</div>
+
+</body>
+</html>
