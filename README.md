@@ -148,6 +148,8 @@ pip install -r requirements.txt
 nano .env
 ```
 
+.env
+
 ``` bash
 SECRET_KEY=<your_secret_key>
 ```
