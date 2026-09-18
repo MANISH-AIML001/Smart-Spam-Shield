@@ -94,7 +94,6 @@ The application is built around a Flask backend and a trained Logistic Regressio
 - scikit-learn
 - pandas
 - NumPy
-- NLTK
 - HTML/CSS/JavaScript
 
 ---
