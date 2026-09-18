@@ -1,3 +1,63 @@
+## Running the Project Locally
+
+### Step 1: Clone the repository
+
+```bash
+git clone <repository-url>
+cd "Smart-Spam-Shield"
+```
+
+### Step 2: Create a virtual environment
+
+On Windows:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+On macOS/Linux:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### Step 3: Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Step 4: Create a .env file
+``` bash
+nano .env
+```
+
+.env:
+
+``` bash
+SECRET_KEY=<your_secret_key>
+```
+
+### Step 5: Start the application
+
+```bash
+python app.py
+```
+
+### Step 6: Open the app in a browser
+
+Visit:
+
+```text
+http://127.0.0.1:5000
+```
+
+You should see the login page. Create an account and sign in to use the spam detector.
+
+---
+
 # Smart Spam Shield
 
 Smart Spam Shield is a web-based spam detection system built with Flask and machine learning. It allows users to sign up or log in, paste a message, and get a spam-risk verdict such as safe, suspicious, or spam. The app combines a trained ML model to detect common spam patterns such as urgency words, links, capital-letter usage, and suspicious message structure.
@@ -109,66 +169,6 @@ The prediction is displayed together with confidence percentages and a list of d
 ### 4. Why the Verdict Was Given
 
 The app also shows the feature breakdown for the scanned message. For example, if the text contains many urgency cues like free, winner, claim, or urgent, the app may mark it as suspicious or spam.
-
----
-
-## Running the Project Locally
-
-### Step 1: Clone the repository
-
-```bash
-git clone <repository-url>
-cd "Spam Detector"
-```
-
-### Step 2: Create a virtual environment
-
-On Windows:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-On macOS/Linux:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### Step 3: Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Step 4: Create a .env file
-``` bash
-nano .env
-```
-
-.env
-
-``` bash
-SECRET_KEY=<your_secret_key>
-```
-
-### Step 5: Start the application
-
-```bash
-python app.py
-```
-
-### Step 6: Open the app in a browser
-
-Visit:
-
-```text
-http://127.0.0.1:5000
-```
-
-You should see the login page. Create an account and sign in to use the spam detector.
 
 ---
 
