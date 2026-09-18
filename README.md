@@ -94,8 +94,6 @@ The message is processed with `extract_features()` from `utils.py`, which calcul
 - uppercase ratio,
 - urgency-word score.
 
-These features are sent to the trained ML model.
-
 ### 3. Model Prediction
 
 The trained model is loaded from `models/v2/lr_model.pkl` using `pickle`.
