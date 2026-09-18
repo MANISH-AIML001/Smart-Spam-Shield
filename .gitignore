@@ -1,0 +1,7 @@
+.venv/
+.vscode/
+_pycache_/
+users.db
+dataset/testing/testing_set_1
+data/training/spam.csv
+dataset/training/clean-dataset.csv
