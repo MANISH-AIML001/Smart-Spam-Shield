@@ -143,13 +143,22 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 4: Start the application
+### Step 4: Create a .env file
+``` bash
+nano .env
+```
+
+``` bash
+SECRET_KEY=<your_secret_key>
+```
+
+### Step 5: Start the application
 
 ```bash
 python app.py
 ```
 
-### Step 5: Open the app in a browser
+### Step 6: Open the app in a browser
 
 Visit:
 
