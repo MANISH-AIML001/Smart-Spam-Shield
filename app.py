@@ -6,10 +6,10 @@ Handles:
 1. Authentication (signup / login / logout) with a local SQLite database
    and hashed passwords (werkzeug.security) — ships with Flask, no extra
    install needed.
-2. The trained pipeline (spam_model.pkl + tfidf_vectorizer.pkl) served at
-   /predict, only reachable once a user is signed in.
+2. The trained pipeline (v2/lr_model.pkl) served at
+   /api/v1//predict, only reachable once a user is signed in.
 
-Run: python app_flask.py
+Run: python app.py
 Then open: http://127.0.0.1:5000
 """
 
@@ -67,7 +67,7 @@ def login_required(view):
 
 
 # -------------------- Load trained artifacts --------------------
-with open("models/v2/lr_model.pkl", "rb") as f:
+with open("models/v1/lr_model.pkl", "rb") as f:
     pipeline = pickle.load(f)
 
 FEATURE_LABELS = {
@@ -84,8 +84,8 @@ FEATURE_LABELS = {
 
 
 # -------------------- Auth routes --------------------
-@app.route("/signup", methods=["GET", "POST"])
-def signup():
+@app.route("/register", methods=["GET", "POST"])
+def register():
     error = None
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -113,15 +113,15 @@ def signup():
                 )
                 conn.commit()
                 conn.close()
-                return redirect(url_for("login", signed_up="1"))
+                return redirect(url_for("login", register="1"))
 
-    return render_template("signup.html", error=error)
+    return render_template("register.html", error=error)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
-    just_signed_up = request.args.get("signed_up") == "1"
+    just_register = request.args.get("register") == "1"
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -139,7 +139,7 @@ def login():
             return redirect(url_for("home"))
         error = "Incorrect username or password."
 
-    return render_template("login.html", error=error, just_signed_up=just_signed_up)
+    return render_template("login.html", error=error, just_register=just_register)
 
 
 @app.route("/logout")

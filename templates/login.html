@@ -18,16 +18,16 @@
     </div>
 
     <h1 class="gradient-text auth-heading">Welcome back</h1>
-    <p class="auth-sub">Sign in to scan a message.</p>
+    <p class="auth-sub">Log in to scan a message.</p>
 
-    {% if just_signed_up %}
-      <div class="auth-note auth-note--safe">Account created — sign in below.</div>
+    {% if just_register %}
+      <div class="auth-note auth-note--safe">Account created — Log in below.</div>
     {% endif %}
     {% if error %}
       <div class="auth-note auth-note--spam">{{ error }}</div>
     {% endif %}
 
-    <form method="POST" class="auth-form">
+    <form method="POST" class="auth-form" action="{{ url_for('login') }}">
       <label>
         <span>Username</span>
         <input type="text" name="username" autocomplete="username" required autofocus>
@@ -36,11 +36,11 @@
         <span>Password</span>
         <input type="password" name="password" autocomplete="current-password" required>
       </label>
-      <button type="submit">Sign in</button>
+      <button type="submit">Log in</button>
     </form>
 
     <p class="auth-switch">
-      New here? <a href="{{ url_for('signup') }}">Create an account</a>
+      New here? <a href="{{ url_for('register') }}">Create an account</a>
     </p>
   </div>
 </div>
