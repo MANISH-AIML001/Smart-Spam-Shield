@@ -13,8 +13,8 @@
   --spam: #ff6b5b;
   --spam-dim: rgba(255, 107, 91, 0.14);
 
-  --font-display: "Space Grotesk", "Inter", sans-serif;
-  --font-body: "Inter", sans-serif;
+  --font-display: "Poppins", "Inter", sans-serif;
+  --font-body: "Poppins", "Inter", sans-serif;
 }
 
 * { box-sizing: border-box; }
