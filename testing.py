@@ -5,7 +5,7 @@ from utils import dataset_preprocessing, load_dataset, model_evaluation
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DATASET = ROOT / "dataset/testing/spam_assassin.csv.zip"
-DEFAULT_MODEL = ROOT / "models/v2/lr_model.pkl"
+DEFAULT_MODEL = ROOT / "models/v1/lr_model.pkl"
 DEFAULT_CLEAN_DATASET = ROOT / "dataset/testing/testing_set_1.csv"
 
 

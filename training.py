@@ -14,7 +14,7 @@ DEFAULT_DATASETS = (
     ROOT / "dataset/training/archive (1).zip",
     ROOT / "dataset/training/spam.csv",
 )
-DEFAULT_MODEL = ROOT / "models/v2/lr_model.pkl"
+DEFAULT_MODEL = ROOT / "models/v1/lr_model.pkl"
 DEFAULT_CLEAN_DATASET = ROOT / "dataset/training/clean-dataset.csv"
 
 

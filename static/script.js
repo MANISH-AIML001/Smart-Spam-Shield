@@ -42,7 +42,7 @@ scanBtn.addEventListener("click", async () => {
   gaugeLabel.textContent = "scanning";
 
   try {
-    const res = await fetch("/predict", {
+    const res = await fetch("/api/v1/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message }),
