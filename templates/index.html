@@ -20,7 +20,7 @@
       <a href="#how" class="nav-btn">How it works</a>
       <a href="#tech" class="nav-btn">Tech</a>
       <span class="user-chip">{{ username[:1].upper() }}</span>
-      <a href="{{ url_for('logout') }}" class="nav-btn nav-btn--signout">Sign out</a>
+      <a href="{{ url_for('logout') }}" class="nav-btn nav-btn--signout">Log out</a>
     </nav>
   </div>
 </header>
@@ -83,8 +83,10 @@
 
 <section id="how" class="wrap how">
   <h2>How the model decides</h2>
-  <p class="how-lede">Three layers work together on every scan — no single
-    signal has to catch everything on its own.</p>
+  <p class="how-lede">The detector uses a logistic regression model.
+    It relies on text-based features from the message, while the behavioral
+    spam signals are shown to the user for transparency but are not used in
+    training or prediction.</p>
   <div class="how-grid">
     <article class="how-card how-card--tfidf">
       <div class="how-card__icon">
@@ -92,8 +94,9 @@
       </div>
       <span class="how-card__num">TF&#8209;IDF</span>
       <h3>Reads the words</h3>
-      <p>Every word is weighted by how unusual and message-specific it is,
-        so the model learns which word patterns tend to show up in spam.</p>
+      <p>Each message is transformed into word features that highlight terms
+        unusually common in spam. These words help the model learn which
+        language patterns are most suspicious.</p>
     </article>
     <article class="how-card how-card--behaviour">
       <div class="how-card__icon">
@@ -101,18 +104,20 @@
       </div>
       <span class="how-card__num">Behaviour</span>
       <h3>Reads the structure</h3>
-      <p>Nine extra signals — link count, capital-letter ratio, urgency
-        words, phone numbers — catch spam that's been reworded to dodge
-        word filters.</p>
+      <p>These signal metrics — such as link count, uppercase ratio, urgency
+        words, phone number presence and other message-pattern indicators —
+        are shown only to the user for explanation. They are not included in
+        the logistic regression model's training or prediction features.</p>
     </article>
     <article class="how-card how-card--ensemble">
       <div class="how-card__icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M8 8.5 11 16M16 8.5 13 16M8.4 7h7.2"/></svg>
       </div>
-      <span class="how-card__num">Ensemble</span>
-      <h3>Three models vote</h3>
-      <p>Logistic Regression, Random Forest and SVM each cast a weighted
-        vote. Agreement across all three makes the verdict harder to fool.</p>
+      <span class="how-card__num">Model</span>
+      <h3> Logistic regression</h3>
+      <p>The final verdict is produced by trained logistic regression
+        classifier that combines the text features to estimate the 
+        probability the message is spam.</p>
     </article>
   </div>
 </section>
