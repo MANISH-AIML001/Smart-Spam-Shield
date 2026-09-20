@@ -3,6 +3,7 @@
 .vscode/
 __pycache__/
 users.db
+dataset/
 dataset/testing/testing_set_1
 dataset/training/spam.csv
 dataset/training/clean-dataset.csv
