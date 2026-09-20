@@ -1,5 +1,11 @@
+.env
 .venv/
+.vscode/
 __pycache__/
 users.db
-dataset/testing/testing_set_1.csv
+dataset/testing/testing_set_1
+dataset/training/spam.csv
 dataset/training/clean-dataset.csv
+dataset/testing/spam_assassin.zip
+dataset/training/archive (1).zip
+dataset/training/processed_data.csv

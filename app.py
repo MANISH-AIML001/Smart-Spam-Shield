@@ -67,7 +67,7 @@ def login_required(view):
 
 
 # -------------------- Load trained artifacts --------------------
-with open("models/v2/lr_model.pkl", "rb") as f:
+with open("models/v1/lr_model.pkl", "rb") as f:
     pipeline = pickle.load(f)
 
 FEATURE_LABELS = {
