@@ -7,5 +7,5 @@ dataset/testing/testing_set_1
 dataset/training/spam.csv
 dataset/training/clean-dataset.csv
 dataset/testing/spam_assassin.zip
-dataset/training/archive (1).zip
-dataset/training/processed_data.csv
+dataset/training/archive.zip
+dataset/training/processed_data.zip
