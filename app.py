@@ -176,12 +176,12 @@ def predict():
     #   80-100  -> safe
     #   50-79.9 -> suspicious
     #   below 50 -> spam
-    if safe_conf >= 80:
-        verdict = "safe"
+    if spam_conf >= 70:
+        verdict = "spam"
     elif safe_conf >= 50:
         verdict = "suspicious"
     else:
-        verdict = "spam"
+        verdict = "safe"
 
     triggers = [w for w in URGENCY_WORDS if w in msg.lower()]
 
