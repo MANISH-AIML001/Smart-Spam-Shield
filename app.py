@@ -172,13 +172,13 @@ def predict():
     spam_conf = round(float(proba[1]) * 100, 1)
     safe_conf = round(100 - spam_conf, 1)
 
-    # Three-tier verdict, based on how "safe" the message scores:
+    # Three-tier verdict, based on how "unsafe" the message scores:
     #   80-100  -> safe
     #   50-79.9 -> suspicious
     #   below 50 -> spam
     if spam_conf >= 70:
         verdict = "spam"
-    elif safe_conf >= 50:
+    elif spam_conf >= 50:
         verdict = "suspicious"
     else:
         verdict = "safe"
