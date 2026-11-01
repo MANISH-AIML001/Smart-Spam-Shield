@@ -8,6 +8,7 @@ from sklearn.metrics import( accuracy_score, classification_report, confusion_ma
 precision_score, f1_score, recall_score
 )
 import email
+import html
 from email.policy import default
 import re
 
@@ -130,60 +131,139 @@ def clean_email_message(text):
     except (ValueError, SyntaxError):
         pass
 
-    return text.strip()
+    return text
 
 
 def clean_raw_email(raw_email_string):
-    text = str(raw_email_string or "").strip()
+    """Extract and normalize the readable body of a raw or flattened email."""
+    if raw_email_string is None or (not isinstance(raw_email_string, (list, tuple, dict)) and pd.isna(raw_email_string)):
+        return ""
+
+    text = str(raw_email_string).strip()
     if not text:
         return ""
 
-    # Handle list-like strings such as "['Subject: ...']" and similar serialized values.
+    # Some datasets serialize a list of message lines as a Python literal.
     if text.startswith("[") and text.endswith("]"):
         try:
             parsed = ast.literal_eval(text)
             if isinstance(parsed, list):
-                text = " ".join(str(x) for x in parsed)
+                text = "\n".join(str(item) for item in parsed).strip()
         except (ValueError, SyntaxError):
             pass
 
-    # Remove common mbox separators.
-    text = re.sub(r'(?m)^From .*\r?\n?', '', text).strip()
+    # Strip an mbox separator only when it is a standalone first line, or a
+    # recognizable flattened mbox prefix. Never apply `From .*` to a whole
+    # newline-free record: several source CSVs flatten the complete email.
+    mbox_prefix = re.compile(
+        r"^From\s+\S+\s+(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+"
+        r"[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4}\s*"
+    )
+    text = re.sub(r"(?m)^From [^\r\n]*\r?\n", "", text, count=1)
+    text = mbox_prefix.sub("", text, count=1).strip()
 
-    # Prefer the actual body when the raw text is a full email with headers.
-    if re.search(r'\r?\n\r?\n', text):
-        parts = re.split(r'\r?\n\r?\n', text, maxsplit=1)
-        if len(parts) == 2 and parts[1].strip():
-            text = parts[1].strip()
+    # Recreate line breaks between headers in CSVs that flattened RFC822
+    # messages to one line. Consume only the leading run of header fields.
+    header_names = (
+        r"return-path|delivered-to|delivery-date|received|message-id|"
+        r"resent-message-id|resent-from|resent-to|from|to|cc|bcc|reply-to|"
+        r"sender|subject|date|mime-version|content-type|content-transfer-encoding|"
+        r"content-disposition|user-agent|x-[a-z0-9-]+|errors-to|lines|references|"
+        r"in-reply-to|mail-followup-to|organization|newsgroups|path|list-id|precedence|status|comments|keywords|url|authentication-results|dkim-signature"
+    )
+    header_line = re.compile(rf"(?i)^\s*(?:{header_names})\s*:")
+    looks_like_email = bool(header_line.match(text))
+    if looks_like_email and "\n" not in text and "\r" not in text:
+        # Match candidate header names once with a lightweight scanner, then
+        # insert boundaries only for recognized fields.
+        # Match candidate header names once with a lightweight scanner, then
+        # insert boundaries only for recognized fields.
+        boundary = re.compile(r"(?i)(?<!\S)([a-z][a-z0-9-]{0,60})\s*:")
+        known_headers = set(header_names.lower().split("|"))
+        head, tail = text[:8192], text[8192:]
+        pieces = []
+        cursor = 0
+        for match in boundary.finditer(head):
+            name = match.group(1).lower()
+            if (name in known_headers or name.startswith("x-")) and match.start() > cursor:
+                pieces.append(head[cursor:match.start()])
+                pieces.append("\n")
+                cursor = match.start()
+        pieces.extend((head[cursor:], tail))
+        text = "".join(pieces)
 
-    # If the remaining content still has only header-like lines, keep the text after
-    # stripping leading metadata lines. This covers list-backed Enron-style records.
-    if not re.search(r'\r?\n\r?\n', text):
+    body_text = text
+    if looks_like_email:
         lines = text.splitlines()
-        body_lines = []
-        header_block_done = False
+        header_lines = []
+        first_body_line = len(lines)
+        for index, line in enumerate(lines):
+            if header_line.match(line):
+                header_lines.append(line.strip())
+            else:
+                first_body_line = index
+                break
 
-        for line in lines:
-            stripped = line.strip()
-            if not header_block_done:
-                if re.match(r'^(from|to|cc|bcc|subject|date|received|message-id|mime-version|content-type|content-transfer-encoding|reply-to|sender|return-path|delivered-to|errors-to|x-)', stripped, flags=re.IGNORECASE):
-                    continue
-                header_block_done = True
-            body_lines.append(line)
+        if header_lines:
+            body_text = "\n".join(lines[first_body_line:]).strip()
+            if not body_text:
+                # Some flattened archives attach body text to the last MIME
+                # transfer-encoding header without a visible line break.
+                encodings = list(re.finditer(
+                    r"(?i)content-transfer-encoding\s*:\s*(?:7bit|8bit|binary|base64|quoted-printable)\b\s*",
+                    text,
+                ))
+                if encodings:
+                    body_text = text[encodings[-1].end():].strip()
+                else:
+                    beenthere = re.search(
+                        r"(?i)x-beenthere\s*:\s*[^\s]+\s+(.+)$", text
+                    )
+                    if beenthere:
+                        body_text = beenthere.group(1).strip()
+            message_source = "\n".join(header_lines) + "\n\n" + body_text
+            try:
+                message = email.message_from_string(message_source, policy=default)
+                plain_parts = []
+                html_parts = []
+                for part in message.walk():
+                    if part.is_multipart() or part.get_content_disposition() == "attachment":
+                        continue
+                    if part.get_content_maintype() != "text":
+                        continue
+                    try:
+                        payload = part.get_content()
+                    except (LookupError, UnicodeError, KeyError):
+                        payload = part.get_payload(decode=True)
+                        if isinstance(payload, bytes):
+                            payload = payload.decode(part.get_content_charset() or "utf-8", errors="replace")
+                    if not isinstance(payload, str) or not payload.strip():
+                        continue
+                    if part.get_content_subtype() == "plain":
+                        plain_parts.append(payload)
+                    elif part.get_content_subtype() == "html":
+                        html_parts.append(payload)
+                if plain_parts:
+                    body_text = "\n".join(plain_parts)
+                elif html_parts:
+                    body_text = "\n".join(html_parts)
+                elif not body_text:
+                    body_text = str(message.get("Subject", ""))
+            except (ValueError, TypeError, LookupError):
+                # Keep the separated body when malformed headers defeat parsing.
+                pass
 
-        if body_lines:
-            text = "\n".join(body_lines).strip()
-
-    # Clean text formatting.
-    text = re.sub(r'<[^>]+>', '', text)
-    text = re.sub(r'http\S+|www\.\S+', 'URL_TOKEN', text)
-    text = re.sub(r'\d+', 'NUMBER_TOKEN', text)
-    text = re.sub(r'(?im)(^|\n)(disclaimer|original message|forwarded by|thanks,).*', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-
-    # Subject-only records should keep their subject text without the Subject: prefix.
-    text = re.sub(r'(?i)^subject\s*:\s*', '', text, count=1).strip()
-
+    # Remove HTML markup, decode entities, and normalize volatile values.
+    text = html.unescape(re.sub(r"<[^>]+>", " ", body_text))
+    text = re.sub(r"(?i)\b(?:https?://|www\.)\S+", "URL_TOKEN", text)
+    text = re.sub(r"\d+", "NUMBER_TOKEN", text)
+    text = re.sub(
+        r"(?im)(^|\n)(disclaimer|original message|forwarded by|thanks,)\b.*$",
+        "",
+        text,
+    )
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"(?i)^subject\s*:\s*", "", text, count=1).strip()
     return text
 
 def model_evaluation(Y_test, Y_pred, model=None):
@@ -214,10 +294,3 @@ def check_dataset(df):
     print(df['label'].value_counts(), df['message'].value_counts())
     print(df['message'].dtype)
     print(df.head())
-
-
-
-
-
-
-

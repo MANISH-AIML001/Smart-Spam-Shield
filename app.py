@@ -6,7 +6,7 @@ Handles:
 1. Authentication (signup / login / logout) with a local SQLite database
    and hashed passwords (werkzeug.security) — ships with Flask, no extra
    install needed.
-2. The trained pipeline (v2/lr_model.pkl) served at
+2. The trained pipeline (models/v1/lr_model.pkl) served at
    /api/v1//predict, only reachable once a user is signed in.
 
 Run: python app.py
@@ -67,7 +67,7 @@ def login_required(view):
 
 
 # -------------------- Load trained artifacts --------------------
-with open("models/v1/lr_model.pkl", "rb") as f:
+with open("models/v3/lr_model.pkl", "rb") as f:
     pipeline = pickle.load(f)
 
 FEATURE_LABELS = {
