@@ -9,14 +9,13 @@ from sklearn.linear_model import LogisticRegression
 from utils import dataset_preprocessing, load_dataset, model_evaluation
 
 ROOT = Path(__file__).resolve().parent
-# DEFAULT_DATASETS = (
-#     ROOT / "dataset/training/processed_data.zip",
-#     ROOT / "dataset/training/archive.zip",
-#     ROOT / "dataset/training/spam.csv",
-# )
-DEFAULT_DATASETS = (ROOT / "dataset/training/training_balanced.csv",)
-DEFAULT_MODEL = ROOT / "models/v3/lr_model.pkl"
-DEFAULT_CLEAN_DATASET = None
+DEFAULT_DATASETS = (
+    ROOT / "dataset/training/spam_messages_train.csv",
+    ROOT / "dataset/training/archive.zip",
+    ROOT / "dataset/training/spam.csv",
+)
+DEFAULT_MODEL = ROOT / "models/v2/lr_model.pkl"
+DEFAULT_CLEAN_DATASET = "dataset/training/clean-dataset-2.csv"
 
 
 def build_search(random_state=42):
