@@ -13,9 +13,7 @@ Run: python app.py
 Then open: http://127.0.0.1:5000
 """
 
-import re
-import string
-import pickle
+import joblib
 import sqlite3
 from functools import wraps
 import os
@@ -67,8 +65,7 @@ def login_required(view):
 
 
 # -------------------- Load trained model --------------------
-with open("models/v1/lr_model.pkl", "rb") as model_file:
-    pipeline = pickle.load(model_file)
+pipeline = joblib.load("models/v1/lr_model.joblib")
 
 FEATURE_LABELS = {
     "length": "Message length",

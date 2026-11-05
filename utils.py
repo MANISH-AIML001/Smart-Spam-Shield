@@ -2,7 +2,6 @@ import ast
 import email
 import html
 import re
-import zipfile
 from email.policy import default
 from pathlib import Path
 
