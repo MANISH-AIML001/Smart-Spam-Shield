@@ -8,5 +8,9 @@ dataset/testing/testing_set_1
 dataset/training/spam.csv
 dataset/training/clean-dataset.csv
 dataset/testing/spam_assassin.zip
+dataset/testing/spam_assassin.csv
 dataset/training/archive.zip
-dataset/training/processed_data.zip
+dataset/training/Enron.csv
+dataset/training/training_balanced.csv
+models/v3/lr_model.pkl
+models/v4/lr_model.pkl

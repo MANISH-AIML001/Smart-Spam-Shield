@@ -1,15 +1,20 @@
-import re
-import zipfile
-import pandas as pd 
-import numpy as np
 import ast
-from pathlib import Path
-from sklearn.metrics import( accuracy_score, classification_report, confusion_matrix, 
-precision_score, f1_score, recall_score
-)
 import email
-from email.policy import default
+import html
 import re
+from email.policy import default
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 
 URGENCY_WORDS = [
     "free", "win", "winner", "cash", "prize", "urgent", "congratulations",
@@ -19,20 +24,14 @@ URGENCY_WORDS = [
 
 
 def load_dataset(path, encoding="utf-8") -> pd.DataFrame:
-    """Load a CSV dataset from disk or from a ZIP archive."""
+    """Load a CSV using the encoding specified for its source dataset."""
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Dataset not found: {path}")
 
-    if path.suffix.lower() != ".zip":
+    if path.suffix.lower() == ".csv":
         return pd.read_csv(path, encoding=encoding)
 
-    with zipfile.ZipFile(path) as archive:
-        csv_members = [name for name in archive.namelist() if name.lower().endswith(".csv")]
-        if not csv_members:
-            raise ValueError(f"ZIP archive contains no CSV file: {path}")
-        with archive.open(csv_members[0]) as csv_file:
-            return pd.read_csv(csv_file, encoding=encoding)
 
 def extract_features(msg):
     raw = str(msg)
@@ -52,138 +51,85 @@ def extract_features(msg):
     ]
 
 def ensure_label_message_columns(df: pd.DataFrame) -> pd.DataFrame:
+    # Standardize common dataset headers to the label/message pair.
     df = df.copy()
 
     if {"label", "message"}.issubset(df.columns):
         return df
-    if {'text', 'target'}.issubset(df.columns):
-        return df.rename(columns={'text': 'message', 'target': 'label'})
-    if {'label', 'text'}.issubset(df.columns):
-        return df.rename(columns={'text': 'message'})
-    
+    if {"text", "target"}.issubset(df.columns):
+        return df.rename(columns={"text": "message", "target": "label"})
+    if {"label", "text"}.issubset(df.columns):
+        return df.rename(columns={"text": "message"})
+
     if len(df.columns) < 2:
         raise ValueError("Dataset must contain at least two columns.")
 
-    # Both current datasets store label and message in the first two columns.
     df = df.iloc[:, :2].copy()
     df.columns = ["label", "message"]
     return df
 
-def dataset_preprocessing(dataset : list[tuple[pd.DataFrame, str]], saving_path :str = None) -> pd.DataFrame:
-    if not dataset :
-        raise ValueError("DataFrame is empty. Pass atleat one panda dataframe.")
 
-    normalized = []
-    for df, path in dataset:
+def dataset_preprocessing(
+    datasets: list[tuple[pd.DataFrame, str]],
+    saving_path: str | Path | None = None,
+) -> pd.DataFrame:
+    # Combine datasets and normalize their labels and message text.
+    if not datasets:
+        raise ValueError("Pass at least one dataset as a (dataframe, source) pair.")
 
-        df = ensure_label_message_columns(df)
-        normalized.append(df)
+    normalized = [
+        ensure_label_message_columns(frame)
+        for frame, _source in datasets
+    ]
+    data = pd.concat(normalized, ignore_index=True)
 
-    if len(dataset) > 1:
-        df = pd.concat(normalized, ignore_index=True)
-    else:
-        df = normalized[0]
-    #df = df.copy()
+    data = data.replace([np.inf, -np.inf], np.nan)
+    data = data.drop(columns=["Unnamed:0"], errors="ignore")
+    data = data.dropna(axis=1, how="all")
+    data = data.loc[:, ~data.columns.str.contains("^Unnamed")]
+    data = data.dropna(subset=["message"])
+    data["label"] = data["label"].astype(str).str.strip().str.lower()
+    data["message"] = data["message"].map(clean_raw_email)
+    data = data[data["label"].isin({"ham", "spam", "0", "1"})]
+    data["label"] = data["label"].map({"spam": 1, "ham": 0, "0": 0, "1": 1})
+    data["label"] = data["label"].astype(int)
+    data = data.drop_duplicates()
 
-    df = df.replace([np.inf, -np.inf], np.nan)  # Repalce non-finite values inf with nan
-    
-    df= df.drop(columns= ["Unnamed:0"],errors="ignore")    # Drop the unnamed columns
-   
-    df = df.dropna(axis=1, how='all')    #Drop completely empty columns
-    
-    df = df.loc[:, ~df.columns.str.contains("^Unnamed")]    # Drop the columns which name is stating with Unnamed
-    
-    df = df.dropna(subset=['message'])      # Drop the column missing the message
-
-    df["label"] = df["label"].astype(str).str.strip().str.lower()   # Lowercase the labels and remove whitespaces from messages
-    df['message'] = df['message'].astype(str)
-    df["message"] = df["message"].apply(clean_raw_email)   # Clean the raw emails in the dataset
-    
-    df = df[df['label'].isin(['ham', 'spam', 0, 1, '0', '1'])]  # Drop the column thats label is not ham or spam
-    df = df.dropna(subset=['label'])
-    
-    df = df.drop_duplicates()   # Drop the duplicate columns
-    
-    df["label"]= df["label"].map({  
-    'spam':1,
-    'ham':0,
-     '0':0,
-     '1':1
-    })  # Map 0 to ham and 1 to spam
-    df['label'] = df['label'].astype(int)   # Ensures that labels are all of int type
     if saving_path:
-        df.to_csv(saving_path, index=False)    # Save dataset to the given path
-   
-    return df
-
-def clean_email_message(text):
-    text = str(text).strip()
-    
-    if not (text.startswith("[") and text.endswith("]")):
-        return text
-    try:
-        parsed = ast.literal_eval(text) # Clean the emails in enron dataset that are stored as a list of strings
-
-        if isinstance(parsed, list):
-            text = " ".join(str(x) for x in parsed)
-        
-    except (ValueError, SyntaxError):
-        pass
-
-    return text.strip()
+        data.to_csv(saving_path, index=False)
+    return data
 
 
-def clean_raw_email(raw_email_string):
-    text = str(raw_email_string or "").strip()
-    if not text:
+def clean_raw_email(raw_email_string) -> str:
+    # Normalize plain text, serialized Enron lines, and raw emails.
+    if raw_email_string is None or (
+        not isinstance(raw_email_string, (list, tuple, dict))
+        and pd.isna(raw_email_string)
+    ):
         return ""
 
-    # Handle list-like strings such as "['Subject: ...']" and similar serialized values.
-    if text.startswith("[") and text.endswith("]"):
-        try:
-            parsed = ast.literal_eval(text)
-            if isinstance(parsed, list):
-                text = " ".join(str(x) for x in parsed)
-        except (ValueError, SyntaxError):
-            pass
+    if isinstance(raw_email_string, (list, tuple)):
+        text = "\n".join(str(line) for line in raw_email_string)
+    else:
+        text = str(raw_email_string).strip()
+        if text.startswith("[") and text.endswith("]"):
+            try:
+                lines = ast.literal_eval(text)
+                if isinstance(lines, list):
+                    text = "\n".join(str(line) for line in lines)
+            except (ValueError, SyntaxError):
+                pass
 
-    # Remove common mbox separators.
-    text = re.sub(r'(?m)^From .*\r?\n?', '', text).strip()
-
-    # Prefer the actual body when the raw text is a full email with headers.
-    if re.search(r'\r?\n\r?\n', text):
-        parts = re.split(r'\r?\n\r?\n', text, maxsplit=1)
-        if len(parts) == 2 and parts[1].strip():
-            text = parts[1].strip()
-
-    # If the remaining content still has only header-like lines, keep the text after
-    # stripping leading metadata lines. This covers list-backed Enron-style records.
-    if not re.search(r'\r?\n\r?\n', text):
-        lines = text.splitlines()
-        body_lines = []
-        header_block_done = False
-
-        for line in lines:
-            stripped = line.strip()
-            if not header_block_done:
-                if re.match(r'^(from|to|cc|bcc|subject|date|received|message-id|mime-version|content-type|content-transfer-encoding|reply-to|sender|return-path|delivered-to|errors-to|x-)', stripped, flags=re.IGNORECASE):
-                    continue
-                header_block_done = True
-            body_lines.append(line)
-
-        if body_lines:
-            text = "\n".join(body_lines).strip()
-
-    # Clean text formatting.
-    text = re.sub(r'<[^>]+>', '', text)
-    text = re.sub(r'http\S+|www\.\S+', 'URL_TOKEN', text)
-    text = re.sub(r'\d+', 'NUMBER_TOKEN', text)
-    text = re.sub(r'(?im)(^|\n)(disclaimer|original message|forwarded by|thanks,).*', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-
-    # Subject-only records should keep their subject text without the Subject: prefix.
-    text = re.sub(r'(?i)^subject\s*:\s*', '', text, count=1).strip()
-
+    text = html.unescape(re.sub(r"<[^>]+>", " ", text))
+    text = re.sub(r"(?i)\b(?:https?://|www\.)\S+", "URL_TOKEN", text)
+    text = re.sub(r"\d+", "NUMBER_TOKEN", text)
+    text = re.sub(
+        r"(?im)(^|\n)(disclaimer|original message|forwarded by|thanks,)\b.*$",
+        "",
+        text,
+    )
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"(?i)^subject\s*:\s*", "", text, count=1).strip()
     return text
 
 def model_evaluation(Y_test, Y_pred, model=None):
@@ -214,10 +160,3 @@ def check_dataset(df):
     print(df['label'].value_counts(), df['message'].value_counts())
     print(df['message'].dtype)
     print(df.head())
-
-
-
-
-
-
-

@@ -6,22 +6,20 @@ Handles:
 1. Authentication (signup / login / logout) with a local SQLite database
    and hashed passwords (werkzeug.security) — ships with Flask, no extra
    install needed.
-2. The trained pipeline (v2/lr_model.pkl) served at
+2. The trained pipeline (models/v1/lr_model.pkl) served at
    /api/v1//predict, only reachable once a user is signed in.
 
 Run: python app.py
 Then open: http://127.0.0.1:5000
 """
 
-import re
-import string
-import pickle
+import joblib
 import sqlite3
 from functools import wraps
 import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from utils import extract_features
+from utils import clean_raw_email, extract_features
 
 URGENCY_WORDS = [
     "free", "win", "winner", "cash", "prize", "urgent", "congratulations",
@@ -66,9 +64,8 @@ def login_required(view):
     return wrapped
 
 
-# -------------------- Load trained artifacts --------------------
-with open("models/v1/lr_model.pkl", "rb") as f:
-    pipeline = pickle.load(f)
+# -------------------- Load trained model --------------------
+pipeline = joblib.load("models/v1/lr_model.joblib")
 
 FEATURE_LABELS = {
     "length": "Message length",
@@ -165,7 +162,7 @@ def predict():
         return jsonify({"error": "empty_message"}), 400
 
     behav = extract_features(msg)
-    msg_list = [msg]
+    msg_list = [clean_raw_email(msg)]
 
     pred = int(pipeline.predict(msg_list)[0])
     proba = pipeline.predict_proba(msg_list)[0]
