@@ -21,7 +21,7 @@ from functools import wraps
 import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from utils import extract_features
+from utils import clean_raw_email, extract_features
 
 URGENCY_WORDS = [
     "free", "win", "winner", "cash", "prize", "urgent", "congratulations",
@@ -66,9 +66,9 @@ def login_required(view):
     return wrapped
 
 
-# -------------------- Load trained artifacts --------------------
-with open("models/v2/lr_model.pkl", "rb") as f:
-    pipeline = pickle.load(f)
+# -------------------- Load trained model --------------------
+with open("models/v1/lr_model.pkl", "rb") as model_file:
+    pipeline = pickle.load(model_file)
 
 FEATURE_LABELS = {
     "length": "Message length",
@@ -165,7 +165,7 @@ def predict():
         return jsonify({"error": "empty_message"}), 400
 
     behav = extract_features(msg)
-    msg_list = [msg]
+    msg_list = [clean_raw_email(msg)]
 
     pred = int(pipeline.predict(msg_list)[0])
     proba = pipeline.predict_proba(msg_list)[0]

@@ -155,7 +155,7 @@ The message is processed with `extract_features()` from `utils.py`, which calcul
 
 ### 3. Model Prediction
 
-The trained model is loaded from `models/v2/lr_model.pkl` using `pickle`.
+The trained model is loaded from `models/v1/lr_model.pkl` using `pickle`.
 
 The model predicts whether the message is:
 
@@ -181,18 +181,29 @@ python training.py
 
 This script:
 
-- loads the dataset,
+- loads the listed UTF-8 CSV/ZIP datasets and the cp1252 `spam.csv`,
 - cleans and standardizes the text,
 - trains a TF-IDF + Logistic Regression pipeline,
 - evaluates the model,
-- saves the trained model in `models/v2/lr_model.pkl`.
+- saves the trained model in `models/v1/lr_model.pkl`, the path used by the app.
+
+Serialized email-line lists (as found in some Enron exports) are converted to
+text by the same email-cleaning function used for ordinary email records.
+Training fits one TF-IDF and Logistic Regression pipeline; it does not run
+multiple models for hyperparameter search. It uses the parameter values from
+the current v2 model and prints them before evaluation. The dataset encodings
+are specified next to their paths in `training.py`.
+
+Training replaces `models/v1/lr_model.pkl` every time it runs. The testing
+script evaluates that same file. Both scripts run their work when executed;
+they are intended to be run as scripts, not imported.
 
 ---
 
 ## Important Notes
 
 - The project creates `users.db` automatically when the app starts.
-- The model file is expected to exist in `models/v2/lr_model.pkl`.
+- The model file is expected to exist in `models/v1/lr_model.pkl`.
 - If the model is missing, retrain it with `python training.py` before running the app.
 - The app uses a lightweight local SQLite setup, so it is ideal for local development and demonstration.
 
